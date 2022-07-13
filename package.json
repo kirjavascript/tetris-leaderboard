@@ -12,7 +12,6 @@
         "vite-plugin-solid": "^2.2.6"
     },
     "dependencies": {
-        "@digichanges/solid-multiselect": "^0.0.10",
         "solid-js": "^1.4.2"
     }
 }

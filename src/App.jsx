@@ -1,5 +1,5 @@
 import { For, createSignal, createEffect } from 'solid-js';
-import { MultiSelect } from '@digichanges/solid-multiselect';
+// import { MultiSelect } from '@digichanges/solid-multiselect';
 
 const boards = [
     ['NTSC', 1078039113],
@@ -17,6 +17,28 @@ function getUnique(table, index) {
     return table.rows
         .map((row) => row[index])
         .filter((d, i, a) => a.indexOf(d) === i);
+}
+
+function MultiSelect(props) {
+    function handler(option) {
+        if (props.selected.includes(option)) {
+            props.onSelect(props.selected.filter(opt => opt !== option));
+        } else {
+            props.onSelect(props.selected.concat([option]));
+        }
+    }
+    return (
+        <div>
+            <For each={props.options}>
+                {(option) => (
+                    <>
+                        <label for={option}>{option}</label>
+                        <input type="checkbox" id={option} checked={props.selected.includes(option)} onChange={[handler, option]}/>
+                    </>
+                )}
+            </For>
+        </div>
+    );
 }
 
 function App() {
@@ -46,9 +68,15 @@ function App() {
                     row.c.map((col) => col?.v),
                 );
                 setTable(table);
-                setPlaystyles(getUnique(table, playstyleIndex));
-                setPlatforms(getUnique(table, platformIndex));
-                setProofs(getUnique(table, proofIndex));
+                const playstyles = getUnique(table, playstyleIndex);
+                setPlaystyles(playstyles);
+                setPlaystyleFilter(playstyleFilter().filter(item => playstyles.includes(item)));
+                const platforms = getUnique(table, platformIndex);
+                setPlatforms(platforms);
+                setPlatformFilter(platformFilter().filter(item => platforms.includes(item)));
+                const proofs = getUnique(table, proofIndex);
+                setProofs(proofs);
+                setProofFilter(proofFilter().filter(item => proofs.includes(item)));
             })
             .catch(console.error);
     });
@@ -61,34 +89,19 @@ function App() {
                 </For>
             </select>
             <MultiSelect
-                style={{
-                    chips: { color: 'white', 'background-color': 'steelblue' },
-                }}
                 options={playstyles()}
                 onSelect={(items) => setPlaystyleFilter(items)}
-                onRemove={(items) => setPlaystyleFilter(items)}
-                showCheckbox={true}
-                selectedValues={playstyleFilter()}
+                selected={playstyleFilter()}
             />
             <MultiSelect
-                style={{
-                    chips: { color: 'white', 'background-color': 'steelblue' },
-                }}
                 options={platforms()}
                 onSelect={(items) => setPlatformFilter(items)}
-                onRemove={(items) => setPlatformFilter(items)}
-                showCheckbox={true}
-                selectedValues={platformFilter()}
+                selected={platformFilter()}
             />
             <MultiSelect
-                style={{
-                    chips: { color: 'white', 'background-color': 'steelblue' },
-                }}
                 options={proofs()}
                 onSelect={(items) => setProofFilter(items)}
-                onRemove={(items) => setProofFilter(items)}
-                showCheckbox={true}
-                selectedValues={proofFilter()}
+                selected={proofFilter()}
             />
             <table>
                 <thead>
@@ -114,10 +127,10 @@ function App() {
                                     proofFilter().includes(row[proofIndex])),
                         )}
                     >
-                        {(row) => (
+                        {(row, indexRow) => (
                             <tr>
                                 <For each={row.slice(0, -1)}>
-                                    {(col) => <td>{col}</td>}
+                                    {(col, indexCol) => <td>{indexCol() === 0 ? indexRow() + 1 : col}</td>}
                                 </For>
                             </tr>
                         )}
@@ -128,7 +141,7 @@ function App() {
                 </tbody>
             </table>
 
-            <pre>{JSON.stringify(table(), 0, 4)}</pre>
+            {/*<pre>{JSON.stringify(table(), 0, 4)}</pre>*/}
         </div>
     );
 }
