@@ -1,5 +1,4 @@
 import { For, createSignal, createEffect } from 'solid-js';
-// import { MultiSelect } from '@digichanges/solid-multiselect';
 
 const boards = [
     ['NTSC', 1078039113],
@@ -22,7 +21,7 @@ function getUnique(table, index) {
 function MultiSelect(props) {
     function handler(option) {
         if (props.selected.includes(option)) {
-            props.onSelect(props.selected.filter(opt => opt !== option));
+            props.onSelect(props.selected.filter((opt) => opt !== option));
         } else {
             props.onSelect(props.selected.concat([option]));
         }
@@ -33,7 +32,12 @@ function MultiSelect(props) {
                 {(option) => (
                     <>
                         <label for={option}>{option}</label>
-                        <input type="checkbox" id={option} checked={props.selected.includes(option)} onChange={[handler, option]}/>
+                        <input
+                            type="checkbox"
+                            id={option}
+                            checked={props.selected.includes(option)}
+                            onChange={[handler, option]}
+                        />
                     </>
                 )}
             </For>
@@ -50,8 +54,8 @@ function App() {
     const [proofs, setProofs] = createSignal([]);
 
     const [playstyleFilter, setPlaystyleFilter] = createSignal([]);
-    const [platformFilter, setPlatformFilter] = createSignal([]);
-    const [proofFilter, setProofFilter] = createSignal([]);
+    const [platformFilter, setPlatformFilter] = createSignal(['Console']);
+    const [proofFilter, setProofFilter] = createSignal(['Video']);
 
     createEffect(() => {
         const sheetId = '1ZBxkZEsfwDsUpyire4Xb16er36Covk7nhR8BN_LPodI';
@@ -70,13 +74,21 @@ function App() {
                 setTable(table);
                 const playstyles = getUnique(table, playstyleIndex);
                 setPlaystyles(playstyles);
-                setPlaystyleFilter(playstyleFilter().filter(item => playstyles.includes(item)));
+                setPlaystyleFilter(
+                    playstyleFilter().filter((item) =>
+                        playstyles.includes(item),
+                    ),
+                );
                 const platforms = getUnique(table, platformIndex);
                 setPlatforms(platforms);
-                setPlatformFilter(platformFilter().filter(item => platforms.includes(item)));
+                setPlatformFilter(
+                    platformFilter().filter((item) => platforms.includes(item)),
+                );
                 const proofs = getUnique(table, proofIndex);
                 setProofs(proofs);
-                setProofFilter(proofFilter().filter(item => proofs.includes(item)));
+                setProofFilter(
+                    proofFilter().filter((item) => proofs.includes(item)),
+                );
             })
             .catch(console.error);
     });
@@ -130,14 +142,17 @@ function App() {
                         {(row, indexRow) => (
                             <tr>
                                 <For each={row.slice(0, -1)}>
-                                    {(col, indexCol) => <td>{indexCol() === 0 ? indexRow() + 1 : col}</td>}
+                                    {(col, indexCol) => (
+                                        <td>
+                                            {indexCol() === 0
+                                                ? indexRow() + 1
+                                                : col}
+                                        </td>
+                                    )}
                                 </For>
                             </tr>
                         )}
                     </For>
-                    <tr>
-                        <td>1</td>
-                    </tr>
                 </tbody>
             </table>
 
