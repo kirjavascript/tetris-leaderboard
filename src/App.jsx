@@ -14,33 +14,6 @@ const platformIndex = 3;
 const playstyleIndex = 4;
 const proofIndex = 5;
 
-function MultiSelect(props) {
-    function handler(option) {
-        if (props.selected.includes(option)) {
-            props.onSelect(props.selected.filter((opt) => opt !== option));
-        } else {
-            props.onSelect(props.selected.concat([option]));
-        }
-    }
-    return (
-        <div>
-            <For each={props.options}>
-                {(option) => (
-                    <>
-                        <label for={option}>{option}</label>
-                        <input
-                            type="checkbox"
-                            id={option}
-                            checked={props.selected.includes(option)}
-                            onChange={[handler, option]}
-                        />
-                    </>
-                )}
-            </For>
-        </div>
-    );
-}
-
 function App() {
     const [table, setTable] = createSignal([], { equals: false });
     const [playstyles, setPlaystyles] = createSignal([]);
@@ -131,35 +104,83 @@ function App() {
         window.history.replaceState(null, '', '?' + query);
     });
 
-    return (
-        <div>
-            <a href="https://docs.google.com/spreadsheets/d/1ZBxkZEsfwDsUpyire4Xb16er36Covk7nhR8BN_LPodI/edit">
-                data source
-            </a>
-            <select onChange={(e) => setBoard(boards[e.target.selectedIndex])}>
-                <For each={boards}>
-                    {([name, key]) => (
-                        <option value={key} selected={key === board()[1]}>
-                            {name}
-                        </option>
+    function MultiSelect(props) {
+        function handler(option) {
+            if (props.selected.includes(option)) {
+                props.onSelect(props.selected.filter((opt) => opt !== option));
+            } else {
+                props.onSelect(props.selected.concat([option]));
+            }
+        }
+        return (
+            <div class="multi-select">
+                <For each={props.options}>
+                    {(option) => (
+                        <div class="filter-option">
+                            <label for={option}>{option}
+                                <input
+                                    type="checkbox"
+                                    id={option}
+                                    checked={props.selected.includes(option)}
+                                    onChange={[handler, option]}
+                                />
+                            </label>
+                        </div>
                     )}
                 </For>
-            </select>
-            <MultiSelect
-                options={proofs()}
-                onSelect={(items) => setProofFilter(items)}
-                selected={proofFilter()}
-            />
-            <MultiSelect
-                options={platforms()}
-                onSelect={(items) => setPlatformFilter(items)}
-                selected={platformFilter()}
-            />
-            <MultiSelect
-                options={playstyles()}
-                onSelect={(items) => setPlaystyleFilter(items)}
-                selected={playstyleFilter()}
-            />
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <div class="menu">
+                <div class="board">
+                    <select
+                        onChange={(e) =>
+                            setBoard(boards[e.target.selectedIndex])
+                        }
+                    >
+                        <For each={boards}>
+                            {([name, key]) => (
+                                <option
+                                    value={key}
+                                    selected={key === board()[1]}
+                                >
+                                    {name}
+                                </option>
+                            )}
+                        </For>
+                    </select>
+
+                    <div class="links">
+                        <a href="https://docs.google.com/spreadsheets/d/1ZBxkZEsfwDsUpyire4Xb16er36Covk7nhR8BN_LPodI/edit">
+                            google doc
+                        </a>
+                        {' | '}
+                        <a href="https://github.com/kirjavascript/tetris-leaderboard">
+                            source code
+                        </a>
+                    </div>
+                </div>
+                <div class="filters">
+                    <MultiSelect
+                        options={platforms()}
+                        onSelect={(items) => setPlatformFilter(items)}
+                        selected={platformFilter()}
+                    />
+                    <MultiSelect
+                        options={proofs()}
+                        onSelect={(items) => setProofFilter(items)}
+                        selected={proofFilter()}
+                    />
+                    <MultiSelect
+                        options={playstyles()}
+                        onSelect={(items) => setPlaystyleFilter(items)}
+                        selected={playstyleFilter()}
+                    />
+                </div>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -202,8 +223,6 @@ function App() {
                     </For>
                 </tbody>
             </table>
-
-            {/*<pre>{JSON.stringify(table(), 0, 4)}</pre>*/}
         </div>
     );
 }
