@@ -6,17 +6,13 @@ const boards = [
     ['NTSC29', 388848410],
     ['NTSC29 Lines', 1955350822],
     ['NTSC Level', 2046616260],
+    ['PAL', 1899465071],
+    ['PAL19', 1148941034],
 ];
 
 const platformIndex = 3;
 const playstyleIndex = 4;
 const proofIndex = 5;
-
-function getUnique(table, index) {
-    return table.rows
-        .map((row) => row[index])
-        .filter((d, i, a) => a.indexOf(d) === i);
-}
 
 function MultiSelect(props) {
     function handler(option) {
@@ -47,22 +43,47 @@ function MultiSelect(props) {
 
 function App() {
     const [table, setTable] = createSignal([], { equals: false });
-    const [boardID, setBoardID] = createSignal(boards[0][1]);
-
     const [playstyles, setPlaystyles] = createSignal([]);
     const [platforms, setPlatforms] = createSignal([]);
     const [proofs, setProofs] = createSignal([]);
 
-    const [playstyleFilter, setPlaystyleFilter] = createSignal([]);
-    const [platformFilter, setPlatformFilter] = createSignal(['Console']);
-    const [proofFilter, setProofFilter] = createSignal(['Video']);
+    const query = new URLSearchParams(window.location.search);
+    const params = [...query.entries()].reduce((acc, [type, value]) => {
+        acc[type] = value.split('|');
+        return acc;
+    }, {});
+
+    const [board, setBoard] = createSignal(
+        (params.board &&
+            boards.find(([name]) => name === params.board.join(''))) ||
+            boards[0],
+    );
+    const [playstyleFilter, setPlaystyleFilter] = createSignal(
+        params.playstyle || [],
+    );
+    const [platformFilter, setPlatformFilter] = createSignal(
+        params.platform || ['Console'],
+    );
+    const [proofFilter, setProofFilter] = createSignal(
+        params.proof || ['Video'],
+    );
+
+    function normal(str) {
+        return str.replace(/Video\+/i, 'Video');
+    }
+
+    function getUnique(table, index) {
+        return table.rows
+            .map((row) => normal(row[index]))
+            .filter((d, i, a) => a.indexOf(d) === i);
+    }
 
     createEffect(() => {
         const sheetId = '1ZBxkZEsfwDsUpyire4Xb16er36Covk7nhR8BN_LPodI';
         const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
         const sheetName = 'user-data';
         const query = encodeURIComponent('Select *');
-        const url = `${base}&sheet=${sheetName}&tq=${query}&gid=${boardID()}`;
+        const url = `${base}&sheet=${sheetName}&tq=${query}&gid=${board()[1]}`;
 
         fetch(url)
             .then((res) => res.text())
@@ -93,17 +114,40 @@ function App() {
             .catch(console.error);
     });
 
+    createEffect(() => {
+        const query = [
+            ['board', [board()[0]]],
+            ['proof', proofFilter()],
+            ['platform', platformFilter()],
+            ['playstyle', playstyleFilter()],
+        ]
+            // .filter(([, group]) => group && group.length)
+            .map(
+                ([name, group]) =>
+                    `${name}=${group.map(encodeURIComponent).join('|')}`,
+            )
+            .join('&');
+        window.history.replaceState(null, '', '?' + query);
+    });
+
     return (
         <div>
-            <select onChange={(e) => setBoardID(e.target.value)}>
+            <a href="https://docs.google.com/spreadsheets/d/1ZBxkZEsfwDsUpyire4Xb16er36Covk7nhR8BN_LPodI/edit">
+                data source
+            </a>
+            <select onChange={(e) => setBoard(boards[e.target.selectedIndex])}>
                 <For each={boards}>
-                    {([name, key]) => <option value={key}>{name}</option>}
+                    {([name, key]) => (
+                        <option value={key} selected={key === board()[1]}>
+                            {name}
+                        </option>
+                    )}
                 </For>
             </select>
             <MultiSelect
-                options={playstyles()}
-                onSelect={(items) => setPlaystyleFilter(items)}
-                selected={playstyleFilter()}
+                options={proofs()}
+                onSelect={(items) => setProofFilter(items)}
+                selected={proofFilter()}
             />
             <MultiSelect
                 options={platforms()}
@@ -111,9 +155,9 @@ function App() {
                 selected={platformFilter()}
             />
             <MultiSelect
-                options={proofs()}
-                onSelect={(items) => setProofFilter(items)}
-                selected={proofFilter()}
+                options={playstyles()}
+                onSelect={(items) => setPlaystyleFilter(items)}
+                selected={playstyleFilter()}
             />
             <table>
                 <thead>
@@ -129,14 +173,16 @@ function App() {
                             (row) =>
                                 (!playstyleFilter().length ||
                                     playstyleFilter().includes(
-                                        row[playstyleIndex],
+                                        normal(row[playstyleIndex]),
                                     )) &&
                                 (!platformFilter().length ||
                                     platformFilter().includes(
-                                        row[platformIndex],
+                                        normal(row[platformIndex]),
                                     )) &&
                                 (!proofFilter().length ||
-                                    proofFilter().includes(row[proofIndex])),
+                                    proofFilter().includes(
+                                        normal(row[proofIndex]),
+                                    )),
                         )}
                     >
                         {(row, indexRow) => (
