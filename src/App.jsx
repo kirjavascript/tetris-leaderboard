@@ -52,6 +52,7 @@ function App() {
         acc[type] = value.split('|');
         return acc;
     }, {});
+    const hasParams = !!Object.keys(params).length;
 
     const [board, setBoard] = createSignal(
         (params.board &&
@@ -62,10 +63,10 @@ function App() {
         params.playstyle || [],
     );
     const [platformFilter, setPlatformFilter] = createSignal(
-        params.platform || ['Console'],
+        params.platform || (hasParams ? [] : ['Console']),
     );
     const [proofFilter, setProofFilter] = createSignal(
-        params.proof || ['Video'],
+        params.proof || (hasParams ? [] : ['Video']),
     );
 
     function normal(str) {
@@ -121,7 +122,7 @@ function App() {
             ['platform', platformFilter()],
             ['playstyle', playstyleFilter()],
         ]
-            // .filter(([, group]) => group && group.length)
+            .filter(([, group]) => group && group.length)
             .map(
                 ([name, group]) =>
                     `${name}=${group.map(encodeURIComponent).join('|')}`,
