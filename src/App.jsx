@@ -10,16 +10,12 @@ const boards = [
     ['PAL19', 1148941034],
 ];
 
-const platformIndex = 3;
-const playstyleIndex = 4;
-const proofIndex = 5;
-const vidPBIndex = 6;
-
 function App() {
     const [table, setTable] = createSignal([]);
     const [playstyles, setPlaystyles] = createSignal([]);
     const [platforms, setPlatforms] = createSignal([]);
     const [proofs, setProofs] = createSignal([]);
+    const [indices, setIndices] = createSignal({});
 
     const query = new URLSearchParams(window.location.search);
     const params = [...query.entries()].reduce((acc, [type, value]) => {
@@ -48,7 +44,7 @@ function App() {
     );
 
     function normal(str) {
-        return str.replace(/Video\+/i, 'Video');
+        return String(str).replace(/Video\+/i, 'Video');
     }
 
     function getUnique(table, index) {
@@ -71,6 +67,16 @@ function App() {
                 table.rows = table.rows.map((row) =>
                     row.c.map((col) => col?.v),
                 );
+                const playstyleIndex = table.cols.findIndex(head => /style/i.test(head.label));
+                const platformIndex = table.cols.findIndex(head => /platform/i.test(head.label));
+                const proofIndex = table.cols.findIndex(head => /proof/i.test(head.label));
+                const vidPBIndex = table.cols.findIndex(head => /vid pb/i.test(head.label));
+                setIndices({
+                    playstyleIndex,
+                    platformIndex,
+                    proofIndex,
+                    vidPBIndex,
+                });
                 setTable(table);
                 const playstyles = getUnique(table, playstyleIndex);
                 setPlaystyles(playstyles);
@@ -209,8 +215,9 @@ function App() {
                 </thead>
                 <tbody>
                     <For
-                        each={table()
-                            .rows?.filter(
+                        each={(() => {
+                            const { playstyleIndex, platformIndex, proofIndex, vidPBIndex } = indices();
+                            const filtered = table().rows?.filter(
                                 (row) =>
                                     (!playstyleFilter().length ||
                                         playstyleFilter().includes(
@@ -224,12 +231,18 @@ function App() {
                                         proofFilter().includes(
                                             normal(row[proofIndex]),
                                         )),
-                            )
-                            .sort((a, b) => {
-                                if (sortByVidPB()) {
-                                    return b[vidPBIndex] - a[vidPBIndex];
-                                }
-                            })}
+                            );
+
+                            if (filtered && sortByVidPB()) {
+                                return filtered
+                                    .filter((row) => row[vidPBIndex])
+                                    .sort(
+                                        (b, a) => a[vidPBIndex] - b[vidPBIndex],
+                                    );
+                            }
+
+                            return filtered;
+                        })()}
                     >
                         {(row, indexRow) => (
                             <tr>
