@@ -13,9 +13,10 @@ const boards = [
 const platformIndex = 3;
 const playstyleIndex = 4;
 const proofIndex = 5;
+const vidPBIndex = 6;
 
 function App() {
-    const [table, setTable] = createSignal([], { equals: false });
+    const [table, setTable] = createSignal([]);
     const [playstyles, setPlaystyles] = createSignal([]);
     const [platforms, setPlatforms] = createSignal([]);
     const [proofs, setProofs] = createSignal([]);
@@ -40,6 +41,10 @@ function App() {
     );
     const [proofFilter, setProofFilter] = createSignal(
         params.proof || (hasParams ? [] : ['Video']),
+    );
+
+    const [sortByVidPB, setSortByVidPB] = createSignal(
+        params.sortBy?.[0] === 'VidPB' ? true : false,
     );
 
     function normal(str) {
@@ -91,9 +96,10 @@ function App() {
     createEffect(() => {
         const query = [
             ['board', [board()[0]]],
-            ['proof', proofFilter()],
             ['platform', platformFilter()],
+            ['proof', proofFilter()],
             ['playstyle', playstyleFilter()],
+            ['sortBy', sortByVidPB() && ['VidPB']],
         ]
             .filter(([, group]) => group && group.length)
             .map(
@@ -117,7 +123,8 @@ function App() {
                 <For each={props.options}>
                     {(option) => (
                         <div class="filter-option">
-                            <label for={option}>{option}
+                            <label for={option}>
+                                {option}
                                 <input
                                     type="checkbox"
                                     id={option}
@@ -162,6 +169,17 @@ function App() {
                             source code
                         </a>
                     </div>
+                    <label for="vid-pb" class="vid-pb">
+                        Sort by Vid PB
+                        <input
+                            type="checkbox"
+                            checked={sortByVidPB()}
+                            id="vid-pb"
+                            onChange={(e) => {
+                                setSortByVidPB(e.target.checked);
+                            }}
+                        />
+                    </label>
                 </div>
                 <div class="filters">
                     <MultiSelect
@@ -191,21 +209,27 @@ function App() {
                 </thead>
                 <tbody>
                     <For
-                        each={table().rows?.filter(
-                            (row) =>
-                                (!playstyleFilter().length ||
-                                    playstyleFilter().includes(
-                                        normal(row[playstyleIndex]),
-                                    )) &&
-                                (!platformFilter().length ||
-                                    platformFilter().includes(
-                                        normal(row[platformIndex]),
-                                    )) &&
-                                (!proofFilter().length ||
-                                    proofFilter().includes(
-                                        normal(row[proofIndex]),
-                                    )),
-                        )}
+                        each={table()
+                            .rows?.filter(
+                                (row) =>
+                                    (!playstyleFilter().length ||
+                                        playstyleFilter().includes(
+                                            normal(row[playstyleIndex]),
+                                        )) &&
+                                    (!platformFilter().length ||
+                                        platformFilter().includes(
+                                            normal(row[platformIndex]),
+                                        )) &&
+                                    (!proofFilter().length ||
+                                        proofFilter().includes(
+                                            normal(row[proofIndex]),
+                                        )),
+                            )
+                            .sort((a, b) => {
+                                if (sortByVidPB()) {
+                                    return b[vidPBIndex] - a[vidPBIndex];
+                                }
+                            })}
                     >
                         {(row, indexRow) => (
                             <tr>

@@ -72,12 +72,20 @@ table {
     text-align: right;
 }
 
+label {
+    font-size: 12px;
+    padding: 3px 15px;
+}
+
 .filter-option {
     display: inline;
-    label {
-        font-size: 12px;
-        padding: 3px 15px;
-    }
+}
+
+.vid-pb {
+    font-size: 9px;
+    padding: 4px 0;
+    margin: 4px 0;
+    display: block;
 }
 
 .links {
